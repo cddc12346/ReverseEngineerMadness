@@ -26,11 +26,12 @@
 		4) ETHREAD -> Thread List Entry -> ETHREAD
 	
 	- First member is called TCB (actually a structure of type KTHREAD)
-	- ** Process Identification Information **
-		- ** Stores a pointer to the owning process **
+	- * Process Identification Information *
+		- * Stores a pointer to the owning process *
 
 7) KTHREAD structure
 ![plot](./Images/KTHREAD.PNG)
+
 
 	- Interesting fields:
 		1) Dispatcher Header
