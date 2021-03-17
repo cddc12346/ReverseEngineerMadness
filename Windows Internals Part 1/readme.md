@@ -17,7 +17,7 @@
 	- KTHREAD structure
 	
 6) ETHREAD structure exists in system address space, while TEB exists in process address space
-[[/images/ETHREAD.PNG|ALT TEXT]]
+[[images/ETHREAD.PNG]]
 
 	- Interesting fields:
 		1) Process this thread belongs to -> EPROCESS
