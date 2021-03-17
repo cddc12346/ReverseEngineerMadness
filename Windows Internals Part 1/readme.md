@@ -26,8 +26,8 @@
 		4) ETHREAD -> Thread List Entry -> ETHREAD
 	
 	- First member is called TCB (actually a structure of type KTHREAD)
-	- **Process Identification Information**
-		- **Stores a pointer to the owning process**
+	- ***Process Identification Information***
+		- ***Stores a pointer to the owning process***
 
 7) KTHREAD structure
 ![plot](./Images/KTHREAD.PNG)
@@ -35,11 +35,26 @@
 
 	- Interesting fields:
 		1) Dispatcher Header
-		2) TEB
+		2) ***TEB (In Userland)***
 		3) Wait Block
 		4) List of pending APCs
 		5) KTHREAD -> Thread List Entry -> KTHREAD
+		
+	- KTHREAD structure contains information that the windows kernel need to perform:
+		1) Thread scheduling
+		2) Synchronization
+		3) Time-keeping
 
-## The second largest heading
+# Useful commands
+1) dt nt!_ETHREAD
+2) dt nt!_KTHREAD
+3) !process 
+	- !process 0 0 explorer.exe
+	- !process ffffe00018C817C0 2 (This shows its thread)
+4) !thread
+5) !TEB
+6) ~(tilde) (show all threads in the process)
+7) dt ntdll!_teb {address}
+***8) .thread /p {address} (Switches context to thread)***
 
-###### The smallest heading
+
