@@ -23,7 +23,21 @@
 		1) Process this thread belongs to -> EPROCESS
 		2) Access Token
 		3) Pending I/O Requests points to IRP
-		4) Thread List Entry
+		4) ETHREAD -> Thread List Entry -> ETHREAD
+	
+	- First member is called TCB (actually a structure of type KTHREAD)
+	- ** Process Identification Information **
+		- ** Stores a pointer to the owning process **
+
+7) KTHREAD structure
+![plot](./Images/KTHREAD.PNG)
+
+	- Interesting fields:
+		1) Dispatcher Header
+		2) TEB
+		3) Wait Block
+		4) List of pending APCs
+		5) KTHREAD -> Thread List Entry -> KTHREAD
 
 ## The second largest heading
 
