@@ -99,3 +99,23 @@ So, hopefully be able to initialize a structure with the initial value = 0
 _KRESOURCEMANAGER
 
 https://query.prod.cms.rt.microsoft.com/cms/api/am/binary/RE375Xk
+
+# https://www.slideshare.net/scovetta/kernelpool
+
+1) Slide 34, Splitting Pool Chunks
+	- In a free pool page, the first chunk is allocated at the front
+	- Subsequent allocations are allocated starting from the end
+	- Using this theory, probably can control where to locate your objects
+
+2) PoolIndex overwrite (Overwriting pool header of another page?)
+
+3) Quota Process Pointer Overwrite (Decrement primitive?)
+
+# Next readingss???
+1) https://www.gatewatcher.com/en/news/blog/kernel-pool-overflow-exploitation-in-real-world-windows-10
+
+-  Quota Process Pointer Overwrite
+
+2) https://www.sstic.org/media/SSTIC2020/SSTIC-actes/pool_overflow_exploitation_since_windows_10_19h1/SSTIC2020-Article-pool_overflow_exploitation_since_windows_10_19h1-bayet_fariello.pdf
+
+- attacks directly aimed at the POOL_HEADER
