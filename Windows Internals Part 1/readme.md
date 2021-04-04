@@ -56,6 +56,40 @@
 10) Thread states
 	- Ready
 	- Deferred ready
+	
+# IRPS
+
+1) There is a pointer to the userbuffer member in the IRP.
+This userbuffer is accessed using routines (Buffered I/O and Direct I/O)
+
+- Buffered I/O
+Allocate data in kernel ***non paged pool*** -> Read from RAM -> Copy to user buffer 
+
+- For write operations, the I/O Manager copies the caller's buffer data into the allocated buffer when ***creating the IRP***.
+- For read operations, the I/O Manager copies data from the allocated bufffer to the user's buffer when the ***IRP completes***. 
+
+![plot](./Images/Buffered_IO.PNG)
+
+2) Structure of IRP
+![plot](./Images/IRP.PNG)
+
+There are some interesting members in the structure!!!
+
+3) I/O Stack Locations
+When an IRP is created, the number of requested I/O Stack Locations is passed to IoAllocateIRP.
+
+4) While active, each IRP is usually queued in an IRP list associated with the thread that requested the I/O.
+This allows the I/O system to find and cancel any outstanding IRPs if a thread terminated with I/O requests that are not completed.
+***!thread can reveal any outstanding IRPs***
+
+***5) Does the IRP size depends on the device object, upper filters, failed request????***
+
+6) A driver that receives an IRP can do a few things:
+- Complete the IRP by calling IoCompleteRequest. This could be due to invalid parameters!! Driver will call IoGetCurrentIrpStackLocation to get a pointer to the stack location it should refer to.
+- Forward the IRP to the next layer by calling IoCallDriver. In this stage, the driver at this layer will need to prepare the pointer to the IO Stack location.
+- Register completion routine (IoSetCompletionRoutine). After IoCompleteRequest is called by a lower layer driver, the IRP travels up calling any completion routine. The IRP originator uses this mechanism to do any post IRP processing and finally free the IRP.
+
+7) Searching for uncompleted IRP with ***!irpfind and !irp [address]*** 
 
 # Useful commands
 1) dt nt!_ETHREAD
