@@ -91,6 +91,11 @@ This allows the I/O system to find and cancel any outstanding IRPs if a thread t
 
 7) Searching for uncompleted IRP with ***!irpfind and !irp [address]*** 
 
+#Spinlocks!??!
+- a mutex look-alike thing but for drivers 
+- main difference: mutex is for synchronisation between threads and spinlock is for CPU
+
+
 # Useful commands
 1) dt nt!_ETHREAD
 2) dt nt!_KTHREAD
