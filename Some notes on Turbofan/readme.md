@@ -1,6 +1,24 @@
+# Some d8 internals can be found in the Slide Practice pdf
+
 # Understand Turbofan...
 
 https://doar-e.github.io/blog/2019/01/28/introduction-to-turbofan/#experimenting-with-the-optimization-phases
+
+## Modification from Pico Docker build
+After compile d8,
+
+Start the container:
+docker create --name temp_container v8_builder 
+
+Copy the source code:
+docker cp temp_container:/home/builder/v8/ new/
+
+Set breakpoint on interested function: (this is done on gdb-gef)
+break OperationTyper::NumberAbs
+break OperationTyper::NumberAdd
+break ../../src/compiler/operation-typer.cc:345
+
+
 
 ## Random
 
@@ -68,3 +86,23 @@ function is a builtin, it will associate a Type with it. For instance, in the ca
 
 ideas: 
 expected type = NaN / Maybe??
+
+//This is triggering breakpoint
+let opt_me = (x) => {
+  x = x + 1;
+  x = x + 1;
+  return Math.abs(x);
+}
+
+for (i = 0; i < 0x10000; i++){
+	console.log(opt_me(Infinity));
+}
+%OptimizeFunctionOnNextCall(opt_me);
+let res = opt_me("foo");
+console.log(res);
+
+Since maybe_minuszero is just on top, I will try to analyse that
+triggering maybe_minuszero can be done like this
+
+In this case, the typer is saying that the type of the Math.Abs 
+function is always Union(PlainNumber, NaN)

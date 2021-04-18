@@ -1,0 +1,6 @@
+Read the source code can easily understand the patch
+1) node refers to current node
+2) left is always GetValueInput(node, 0) and right is (node, 1)
+3) IrOpCode must be kNumberAdd 
+**** How do i trigger this??? ****
+Only big numbers or changing to float seem to do the trick
