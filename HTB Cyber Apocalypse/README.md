@@ -49,7 +49,7 @@ Environ can be found in the below unnamed section.
 
 0x7ffff7dcf000     0x7ffff7dd3000 rw-p     4000 0      
 
-`
+```
 pwndbg> p &environ
 
 $1 = (<data variable, no debug info> *) 0x7ffff7dd0098 <environ>
@@ -57,7 +57,7 @@ $1 = (<data variable, no debug info> *) 0x7ffff7dd0098 <environ>
 pwndbg> x/20gx 0x7ffff7dd0098
 
 0x7ffff7dd0098 <environ>:       0x00007fffffffee58      0x0000000000000000
-`
+```
 
 ## Resources for this challenge:
 Python rol script:
@@ -69,11 +69,17 @@ http://binholic.blogspot.com/2017/05/notes-on-abusing-exit-handlers.html
 Its possible to find fs:[0x30]  in the ld linker section. It is dynamic 
 
 0x7f8d2160b000     0x7f8d217f2000 r-xp   1e7000 0      /home/kali/Desktop/HTB_Cyber/pwn_save_the_environment/libc.so.6
+
 0x7f8d217f2000     0x7f8d219f2000 ---p   200000 1e7000 /home/kali/Desktop/HTB_Cyber/pwn_save_the_environment/libc.so.6
+
 0x7f8d219f2000     0x7f8d219f6000 r--p     4000 1e7000 /home/kali/Desktop/HTB_Cyber/pwn_save_the_environment/libc.so.6
+
 0x7f8d219f6000     0x7f8d219f8000 rw-p     2000 1eb000 /home/kali/Desktop/HTB_Cyber/pwn_save_the_environment/libc.so.6
+
 0x7f8d219f8000     0x7f8d219fc000 rw-p     4000 0      
+
 0x7f8d219fc000     0x7f8d21a25000 r-xp    29000 0      /home/kali/Desktop/HTB_Cyber/pwn_save_the_environment/ld-2.27.so
+
 0x7f8d21c23000     0x7f8d21c25000 rw-p     2000 0      
 
 Its here 0x7f8d21c245b0. I tested it by running a few times... 
