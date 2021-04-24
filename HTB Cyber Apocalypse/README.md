@@ -29,10 +29,11 @@ Command = /root/.cargo/bin/pwninit
 - Run command (/root/.cargo/bin/pwninit)
 - Patchelf  --set-interpreter ./ld-2.27.so ./environment
 - In exploit script:
+```
 	p = gdb.debug(local_bin, '''
-	continue
-	''',env={'LD_PRELOAD':"./libc.so.6"})
-	
+					continue
+					''',env={'LD_PRELOAD':"./libc.so.6"})
+```	
 
 Learn 2 more things:
 1) Exit_Handler can be corrupted to control RIP.
@@ -67,7 +68,7 @@ Decrypting:
 http://binholic.blogspot.com/2017/05/notes-on-abusing-exit-handlers.html
 
 Its possible to find fs:[0x30]  in the ld linker section. It is dynamic 
-
+```
 0x7f8d2160b000     0x7f8d217f2000 r-xp   1e7000 0      /home/kali/Desktop/HTB_Cyber/pwn_save_the_environment/libc.so.6
 
 0x7f8d217f2000     0x7f8d219f2000 ---p   200000 1e7000 /home/kali/Desktop/HTB_Cyber/pwn_save_the_environment/libc.so.6
@@ -81,8 +82,9 @@ Its possible to find fs:[0x30]  in the ld linker section. It is dynamic
 0x7f8d219fc000     0x7f8d21a25000 r-xp    29000 0      /home/kali/Desktop/HTB_Cyber/pwn_save_the_environment/ld-2.27.so
 
 0x7f8d21c23000     0x7f8d21c25000 rw-p     2000 0      
+```
 
-Its here 0x7f8d21c245b0. I tested it by running a few times... 
+Its here at 0x7f8d21c245b0. I tested it by running a few times... 
 
 This challenge does not allow using this method since the check_fun actually checks if the address write is a valid memory...
 
