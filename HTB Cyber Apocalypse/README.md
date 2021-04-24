@@ -27,6 +27,11 @@ command = /root/.cargo/bin/pwninit
 - Place the binary in the current directory
 - Run command (/root/.cargo/bin/pwninit)
 - Patchelf  --set-interpreter ./ld-2.27.so ./environment
+- In exploit script:
+	p = gdb.debug(local_bin, '''
+	continue
+	''',env={'LD_PRELOAD':"./libc.so.6"})
+	
 
 Learn 2 more things:
 1) Exit_Handler can be corrupted to control RIP.
