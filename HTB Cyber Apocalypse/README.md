@@ -22,7 +22,8 @@ Unable to do the usual method of overwriting GOT table to get RIP control.
 
 Patchelf Tutorial:
 https://github.com/Dvd848/CTFs/blob/master/2021_picoCTF/Cache_Me_Outside.md
-command = /root/.cargo/bin/pwninit
+
+Command = /root/.cargo/bin/pwninit
 - Place the libc.so.6 in the current directory
 - Place the binary in the current directory
 - Run command (/root/.cargo/bin/pwninit)
@@ -43,14 +44,17 @@ However, using the server libc, the libc is further hardened, I might require a 
 Refer to below link: 
 http://binholic.blogspot.com/2017/05/notes-on-abusing-exit-handlers.html
 
-2) Leaking environ pointer can be further used to leak the stack address
+2) Leaking environ pointer can be further used to leak the stack address.
 Environ can be found in the below unnamed section. 
+
 0x7ffff7dcf000     0x7ffff7dd3000 rw-p     4000 0      
 
 pwndbg> p &environ
+
 $1 = (<data variable, no debug info> *) 0x7ffff7dd0098 <environ>
 
 pwndbg> x/20gx 0x7ffff7dd0098
+
 0x7ffff7dd0098 <environ>:       0x00007fffffffee58      0x0000000000000000
 
 
