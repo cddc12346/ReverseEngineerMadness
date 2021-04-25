@@ -35,12 +35,14 @@ continue
 ''',env={'LD_PRELOAD':"./libc.so.6"})
 ```	
 
-Learn 2 more things:
+Learn 2 things:
 ## 1) Exit_Handler can be corrupted to control RIP.
 This depends on if the libc allows it to be written and might require further leak of stuff.
 I tried this method. 
 It was workable on Kali, using the unpatched libc and linker.
 However, using the server libc, the libc is further hardened, I might require a leak of the ld and _df_ini. 
+This leak of ld and _df_ini can be found! Refer to the resources section. 
+However, in this exploit, it will not be able to work because check_fun checks both the memory region of where-to-write and what-to-write.
 
 Refer to below link: 
 http://binholic.blogspot.com/2017/05/notes-on-abusing-exit-handlers.html
@@ -67,7 +69,7 @@ https://gist.github.com/trietptm/5cd60ed6add5adad6a34098ce255949a
 Decrypting:
 http://binholic.blogspot.com/2017/05/notes-on-abusing-exit-handlers.html
 
-Its possible to find fs:[0x30]  in the ld linker section. It is dynamic 
+Its possible to find fs:[0x30]  in the ld linker section. Its at a fixed offset from libc base. 
 ```
 0x7f8d2160b000     0x7f8d217f2000 r-xp   1e7000 0      /home/kali/Desktop/HTB_Cyber/pwn_save_the_environment/libc.so.6
 
