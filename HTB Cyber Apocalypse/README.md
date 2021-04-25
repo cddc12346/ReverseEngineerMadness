@@ -1,6 +1,6 @@
 # Cyber Apocalypse 2021
 
-Only looked at 3 challenges 
+Only manage to look at 3 challenges during the CTF. Continued to solve the rest after CTF.
 
 1) Solved controller and system_drop before the CTF
 2) Didn't solve minefield in the end :((
@@ -30,9 +30,9 @@ Command = /root/.cargo/bin/pwninit
 - Patchelf  --set-interpreter ./ld-2.27.so ./environment
 - In exploit script:
 ```
-	p = gdb.debug(local_bin, '''
-					continue
-					''',env={'LD_PRELOAD':"./libc.so.6"})
+p = gdb.debug(local_bin, '''
+continue
+''',env={'LD_PRELOAD':"./libc.so.6"})
 ```	
 
 Learn 2 more things:
@@ -106,7 +106,7 @@ I can control RSP to anything I want! This can be used for stack pivoting!
 This is what happens when leave is called:
 ```
 MOV RSP, RBP		//RBP can be corrupted to whatever we control, so effectively its a stack pivot!!
-POP RBP				//	
+POP RBP			//	
 ```
 
 Since the remote server is no longer up, I have to do it on local. Also, one-gadget does not seem to work on my local. Constraints not matched.
