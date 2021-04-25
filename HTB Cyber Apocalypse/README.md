@@ -36,7 +36,7 @@ Command = /root/.cargo/bin/pwninit
 ```	
 
 Learn 2 more things:
-1) Exit_Handler can be corrupted to control RIP.
+## 1) Exit_Handler can be corrupted to control RIP.
 This depends on if the libc allows it to be written and might require further leak of stuff.
 I tried this method. 
 It was workable on Kali, using the unpatched libc and linker.
@@ -45,7 +45,7 @@ However, using the server libc, the libc is further hardened, I might require a 
 Refer to below link: 
 http://binholic.blogspot.com/2017/05/notes-on-abusing-exit-handlers.html
 
-2) Leaking environ pointer can be further used to leak the stack address.
+## 2) Leaking environ pointer can be further used to leak the stack address.
 Environ can be found in the below unnamed section. 
 
 0x7ffff7dcf000     0x7ffff7dd3000 rw-p     4000 0      
@@ -87,5 +87,38 @@ Its possible to find fs:[0x30]  in the ld linker section. It is dynamic
 Its here at 0x7f8d21c245b0. I tested it by running a few times... 
 
 This challenge does not allow using this method since the check_fun actually checks if the address write is a valid memory...
+
+# Harvester
+Learn 2 things!!!
+
+## 1) Format String Exploitation
+
+Although buffer only takes in 5 characters, we can leak more pointers further down the stack by doing '%XX$p'
+
+Initially, I only use %p%p.... Forgot all about that.
+
+Bottom line = as long as we manage to trigger format string vuln once, we can leak everything we want!!!!
+
+## 2) Power of the leave gadget!
+
+I can control RSP to anything I want! This can be used for stack pivoting!
+
+This is what happens when leave is called:
+```
+MOV RSP, RBP		//RBP can be corrupted to whatever we control, so effectively its a stack pivot!!
+POP RBP				//	
+```
+
+Since the remote server is no longer up, I have to do it on local. Also, one-gadget does not seem to work on my local. Constraints not matched.
+
+Therefore, my exploitation concept is to use a stack pivot, and then do the normal ROP to get system(/bin/sh).
+
+*Make sure to do it on the unpatched binary or else it will crash at while system(/bin/sh)
+
+This is a better writeup:
+
+https://github.com/datajerk/ctf-write-ups/tree/master/cyberapocalypsectf2021/harvester
+
+
 
 
