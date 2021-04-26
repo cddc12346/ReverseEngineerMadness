@@ -23,7 +23,7 @@ Going to the pointer, will have it pointing to the next frame.
 ![plot](./Images/SEH_Stack_Frame.png)
 
 ### My version
-![plot](./Images/SEH_Stack_Frame1.png)
+![plot](./Images/SEH_Stack_Frame_1.PNG)
 
 Windbg snapshot is when application crashes:
 ```
@@ -31,7 +31,8 @@ d fs:[0]
 ```
 shows TIB is at 0x00aff95c
 
-Looking at the memory pane on the top left, we see a pointer to another exception record. A handler is also registered, with debug symbols, it can be identified as _except_handler4.
+Looking at the memory pane on the top left, we see a pointer to another exception record. A handler is also registered.
+With debug symbols, it can be identified as _except_handler4 which is what written in the code.
 
 
 
