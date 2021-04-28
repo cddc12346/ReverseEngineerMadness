@@ -93,7 +93,7 @@ bp 625010b4	//this is the pop, pop, ret in SafeSEH module
 ![plot](./Exercise/CallStack.png)
 ![plot](./Exercise/CallStackDisassembly.png)
 
-### Understanding this disassembly...
+### Understanding the prologue disassembly...
 ```
 //builds EXCEPTION_REGISTRATION structure on the stack
 771e6c99 52              push    edx
