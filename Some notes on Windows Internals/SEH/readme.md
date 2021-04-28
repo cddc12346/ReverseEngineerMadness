@@ -120,3 +120,7 @@ I don't think it is using the Extended Exception Handling Frame....
 Note that the address of the next SEH was put on stack at ESP+8. 
 
 Hence, our exploitation concept of putting a working gadget at next SEH works.
+
+Do refer to my exploit.py script in the Exercise folder. 
+
+You may also use the binary for vulnserver.exe as well.
