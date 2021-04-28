@@ -21,8 +21,9 @@ At the most bottom is the default exception handler, the OS handler.
 At position FS:[0x00] or the TIB, there is the head of the exception handler chain.
 When an exception occurs, ntdll.dll kicks in and retrieves the head of the SEH chain, walks through the list and finds the suitable handler. If no handler is found, the default Win32 handler will be used (at the bottom of the stack)
 
-at fs:[0] -> first 4 bytes is the head of the SEH chain
-Going to the pointer, will have it pointing to the next frame.
+At fs:[0] -> first 4 bytes is the head of the SEH chain.
+
+Going to the pointer, we see it pointing to the next frame.
 
 ## Entire SEH Chain
 ![plot](./Images/SEH_Stack_Frame.png)
@@ -30,24 +31,27 @@ Going to the pointer, will have it pointing to the next frame.
 ### My version
 ![plot](./Images/SEH_Stack_Frame_1.PNG)
 
-Windbg snapshot is when application crashes:
+Above Windbg snapshot is taken when application crashes:
 ```
-Running d fs:[0] shows TIB is at 0x00aff95c
+Running 'd fs:[0]' shows TIB is at 0x00aff95c
 ```
 
-Looking at the memory pane on the top left, we see a pointer to another exception record. A handler is also registered.
+Looking at the memory pane on the top right, we see a pointer to another exception record. A handler is also registered.
 With debug symbols, it can be identified as _except_handler4 which is what written in the code.
-The SEH Linked List can be further parsed to 0xffffffff which is the bottom of the SEH chain.
+The SEH Linked List can be finally parsed to 0xffffffff which is the bottom of the SEH chain.
 
-SEH exploit hardening
-Since windows XP SP1, before exception handler is called, all registers are XORed/NULLed. Won't find a reference to payload in one of the registers.
+SEH exploit hardening:
+
+Since windows XP SP1, before exception handler is called, all registers are XORed/NULLed. 
+
+Hence, we won't find a reference to any useful address in one of the registers.
 
 ## Exploitation Concept
 
 ![plot](./Images/Exploitation_Concept.png)
 ![plot](./Exercise/another_diagram.png)
 
-Payload must do the following things
+Payload must do the following things:
 
 1) Cause an exception. Without an exception, the SEH handler (the one you have overwritten/control) won’t kick in
 2) Overwrite the pointer to the next SEH record with some jumpcode (so it can jump to the shellcode)
@@ -56,24 +60,33 @@ Payload must do the following things
 
 ![plot](./Exercise/ExploitationConcept2.png)
 				
-Question: Why can't you just do a jump at the SE Handler to shellcode?
+### Question: Why can't we just do a jump at the SEH to our shellcode?
 
-SEH Handler's pop pop ret must be a SafeSEH unprotected address. 
-Technically if I find a jmp instruction in the SafeSEH module, I should be able to do it.
- 
+To think of it, if our SEH is a short jump gadget, it is possible not to use pop pop return. 
+
+However, I guess this instruction might be pretty rare.
+
+### What is SAFESEH?
+
+To stop attacks from easily exploiting exception handling buffer overflow, the pop pop return gadget must reside in a safeSEH unprotected module.
+
 I discovered this by attempting to use a ROP gadget from kernel32.dll which failed. 
 
+Sadly, I have yet to find a way to check if a module is SAFESEH using Windbg.
+ 
 
-WinDBG Commands:
+## Finishing up our exploit!
+
+### Useful Windbg Commands
 ```
 !anaylze -v // can also be used for userland exception
 d fs:[0]	// view TIB
 !exchain 	// output the frame (next SEH pointer | SE Handler)
 
-Debugging SafeSEH
+Debugging SafeSEH specific to exploit
 bp ntdll!RtlGetGroupSecurityDescriptor+0x299
-bp ntdll!RtlRaiseStatus+0x8e
-bp 625010b4 //this is the pop, pop, ret in SafeSEH module
+bp ntdll!RtlRaiseStatus+0x8e	//prologue of exception handler
+bp 625010b4	//this is the pop, pop, ret in SafeSEH module
 ```
 
 ## Analysing the call stack disassembly
@@ -85,10 +98,6 @@ bp 625010b4 //this is the pop, pop, ret in SafeSEH module
 //builds EXCEPTION_REGISTRATION structure on the stack
 771e6c99 52              push    edx
 771e6c9a 64ff3500000000  push    dword ptr fs:[0]
-
-stack looks like this:
-0186ecac 0186ffc4 
-0186ecb0 771e6ccd ntdll!RtlRaiseStatus+0xc8
 
 //Install new EXCEPTION_REGISTRATION
 771e6ca1 64892500000000  mov     dword ptr fs:[0],esp
@@ -108,3 +117,6 @@ stack looks like this:
 
 I don't think it is using the Extended Exception Handling Frame....
 
+Note that the address of the next SEH was put on stack at ESP+8. 
+
+Hence, our exploitation concept of putting a working gadget at next SEH works.
