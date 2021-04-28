@@ -55,10 +55,11 @@ Payload must do the following things
 
 ![plot](./Exercise/ExploitationConcept2.png)
 				
-Why can't you just do a jump at the SE Handler to shellcode?
-SEH Handler's pop pop ret must be a SafeSEH unprotected address 
-Attempted to use a ROP gadget from kernel32.dll but fail. 
-Probably if we have a jump instruction can work!
+Question: Why can't you just do a jump at the SE Handler to shellcode?
+
+SEH Handler's pop pop ret must be a SafeSEH unprotected address. Technically if I find a jmp instruction in the SafeSEH module, I should be able to do it.
+ 
+I discovered this by attempting to use a ROP gadget from kernel32.dll which failed. 
 
 
 WinDBG Commands:
@@ -70,15 +71,14 @@ d fs:[0]	// view TIB
 Debugging SafeSEH
 bp ntdll!RtlGetGroupSecurityDescriptor+0x299
 bp ntdll!RtlRaiseStatus+0x8e
-ebp-8 016ee000 
-bp 625010b4 
+bp 625010b4 //this is the pop, pop, ret in SafeSEH module
 ```
 
-![plot](./Exercise/CallStack.png)
-
 ## Analysing the call stack disassembly
+![plot](./Exercise/CallStack.png)
 ![plot](./Exercise/CallStackDisassembly.png)
 
+### Understanding this disassembly...
 ```
 //builds EXCEPTION_REGISTRATION structure on the stack
 771e6c99 52              push    edx
