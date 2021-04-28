@@ -1,0 +1,227 @@
+https://bytepointer.com/resources/pietrek_crash_course_depths_of_win32_seh.htm
+
+Callback function that is called when an exception occurs.
+Takes in 4 parameters.
+An exception callback function looks like this:
+
+EXCEPTION_DISPOSITION 
+__cdecl _except_handler(
+    struct _EXCEPTION_RECORD *ExceptionRecord,	[1]
+    void * EstablisherFrame,			
+    struct _CONTEXT *ContextRecord,				[2]
+    void * DispatcherContext					[3]
+);
+
+Comes from Win32 header file EXCPT.H
+------------------------------------------------------------
+[1] 
+typedef struct _EXCEPTION_RECORD {
+	DWORD ExceptionCode;		[1]
+	DWORD ExceptionFlags;
+	struct _EXCEPTION_RECORD *ExceptionRecord;
+	PVOID ExceptionAddress;		[2]
+	DWORD NumberParameters;
+	DWORD ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
+}  EXCEPTION_RECORD;
+
+[1] DWORD ExceptionCode = 0xC0000005 (STATUS_ACCESS_VIOLATION)
+Status codes can be found in NTSTATUS.H
+
+[2] ExceptionAddress is the address WHERE the exception occurred.
+
+------------------------------------------------------------
+[2] struct _CONTEXT *ContextRecord
+
+defined in WINNT.H
+When used for SEH, the CONTEXT structure represents 
+the register values at the time of the exception.
+
+typedef struct _CONTEXT
+{
+DWORD ContextFlags;
+DWORD Dr0;
+DWORD Dr1;
+DWORD Dr2;
+DWORD Dr3;
+DWORD Dr6;
+DWORD Dr7;
+FLOATING_SAVE_AREA FloatSave;
+DWORD SegGs;
+DWORD SegFs;
+DWORD SegEs;
+DWORD SegDs;
+DWORD Edi;
+DWORD Esi;
+DWORD Ebx;
+DWORD Edx;
+DWORD Ecx;
+DWORD Eax;
+DWORD Ebp;
+DWORD Eip;
+DWORD SegCs;
+DWORD EFlags;
+DWORD Esp;
+DWORD SegSs;
+} CONTEXT;
+------------------------------------------------------------
+[3] void * DispatcherContext
+
+
+------------------------------------------------------------
+How does the OS know where to call when a fault occurs?
+EXCEPTION_REGISTRATION is another structure...
+
+[?] difference between EXCEPTION_REGISTRATION and EXCEPTION_RECORD??
+
+EXCEPTION_REGISTRATION
+_EXCEPTION_REGISTRATION struc
+     prev    dd      ?
+     handler dd      ?
+ _EXCEPTION_REGISTRATION ends
+
+Thread Information Block = TIB
+FS = TIB 
+FS[0] is a pointer to an EXCEPTION_REGISTRATION structure
+
+When an exception occurs -> Look at TIB of faulting thread 
+In TIB of Faulting thread, there is a pointer to an exception handler chain
+OS calls the first exception handling function in the list
+If first callback declines to handle the exception, parse the structure and get the prev pointer to the next exception handler structure
+
+The handler that accepts the exception is the one that decides where 
+control will continue after all the exception handling code is finished.
+
+Its not enough to just set the RIP to desired code address. 
+Because te code tha resumes expect the stack and frame pointer to be set to proper values.
+Eg: Exception handling in a C++ object, after exception probably expect the class to be destructed
+So while unwinding, the destructor need to be called.
+
+EXCEPTION_REGISTRATIONs are built on the stack
+
+------------------------------------------------------------
+There is a default exception record built at the function BaseProcessStart
+Occurs very early even before any user code executes
+Takes in one parameter, the thread entry point.
+Calls the entry point to start execution.
+This call is wrapped in a try and except block. The except block contains a UnhandledExceptionFilter. 
+
+
+------------------------------------------------------------
+COMPILER-LEVEL SEH ("frame-base exception handler")
+
+MOV DWORD PTR FS:[00000000],ESP
+MOV DWORD PTR FS:[00000000],ECX
+Seeing the above code = tearing down a try/except block
+
+All of the  code within a try block is protected by an EXCEPTION REGISTRATION.
+On function entry to try block, this new EXCEPTION_REGISTRATION is put at the head of the linked list.
+After the end of the try block, it is removed from the head of the list.
+
+EXCEPTION_REGISTRATION contains a pointer to EXCEPTION_EXECUTE_HANDLER 
+which is our userland code.
+
+Truth: 
+1) Exception handler field in every EXCEPTION_REGISTRATION 
+points to the same function. This function is called __except_handler3.
+which actually calls our userland exception code.
+
+2) EXCEPTION_REGISTRATIONs aren't built and torn down every time 
+a _try block is entered or exits. Even though we have multiple try/except or nested try/except, only one EXCEPTION_REGISTRATION is built.
+
+------------------------------------------------------------
+The Extended Exception Handling Frame (Specific to C++ Compiler)
+
+Compiler actually adds more fields to the structure of EXCEPTION_REGISTRATION
+
+struct _EXCEPTION_REGISTRATION{
+    struct _EXCEPTION_REGISTRATION *prev;
+    void (*handler)(PEXCEPTION_RECORD,
+                    PEXCEPTION_REGISTRATION,
+                    PCONTEXT,
+                    PEXCEPTION_RECORD);
+    struct scopetable_entry *scopetable;
+    int trylevel;
+    int _ebp;
+    PEXCEPTION_POINTERS xpointers;
+};
+
+scopetable points to an array of structures of type scopetable_entries
+trylevel = index in the array
+_ebp is the value of the stack frame pointer before the EXCEPTION_REGISTRATION was created
+
+[?] Assembly code for GetExceptionCode
+MOV EAX,DWORD PTR [EBP-14]	---> GetExceptionInformation returns EXCEPTION_POINTERS structure
+MOV EAX,DWORD PTR [EAX]		---> From Exception Pointer structure, get the Exception Record
+MOV EAX,DWORD PTR [EAX]		---> From Exception Record, get the Exception Code
+
+GetExceptionInformation:
+MOV EAX,DWORD PTR [EBP-14]
+
+returns a EXCEPTION_POINTERS structure
+
+typedef struct _EXCEPTION_POINTERS {
+  PEXCEPTION_RECORD ExceptionRecord;
+  PCONTEXT          ContextRecord;
+} EXCEPTION_POINTERS, *PEXCEPTION_POINTERS;
+
+typedef struct _EXCEPTION_RECORD {
+	DWORD ExceptionCode;		
+	DWORD ExceptionFlags;
+	struct _EXCEPTION_RECORD *ExceptionRecord;
+	PVOID ExceptionAddress;		
+	DWORD NumberParameters;
+	DWORD ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
+}  EXCEPTION_RECORD;
+
+------------------------------------------------------------
+SEH Frame that Visual C++ generates for a function:
+ EBP-00 _ebp
+ EBP-04 trylevel
+ EBP-08 scopetable pointer
+ EBP-0C handler function address
+ EBP-10 previous EXCEPTION_REGISTRATION
+ EBP-14 GetExceptionPointers
+ EBP-18 Standard ESP in frame
+ 
+------------------------------------------------------------
+__except_handler3:
+1) Creates an EXCEPTION_POINTERS structure
+- Creates this structure
+
+typedef struct _EXCEPTION_POINTERS {
+  PEXCEPTION_RECORD ExceptionRecord;
+  PCONTEXT          ContextRecord;
+} EXCEPTION_POINTERS, *PEXCEPTION_POINTERS;
+
+2) Retrieves the trylevel from the EXCEPTION_REGISTRATION frame
+Trylevel acts as an index into the scopetable array, 
+allows a single EXCEPTION_REGISTRATION to be used for multiple _try blocks
+
+typedef struct _SCOPETABLE
+{
+    DWORD       previousTryLevel;
+    DWORD       lpfnFilter			---> address of filter expression
+    DWORD       lpfnHandler			---> userland defined exception handler
+} SCOPETABLE, *PSCOPETABLE;
+
+The important point here is that there's one SCOPETABLE entry 
+for each _try block in a function
+ 
+trylevel specifies the scopetable array entry to be used
+which then specifies the filter-expression and 
+_except block addresses
+ 
+__except_handler3 retrieves current trylevel,
+points to the corresponding SCOPETABLE entry,
+calls the filter-expression code.
+if the filter-expression code returns EXCEPTION_CONTINUE_SEARCH,
+__except_handler3 moves on to the next SCOPETABLE entry, specified in the 
+previousTryLevel field. 
+If no handle is found by traversing the list, returns DISPOSITION_CONTINUE_SEARCH,
+move to the next EXCEPTION_REGISTRATION frame.
+If filter-express returns EXCEPTION_EXECUTE_HANDLER, exception should be handled by the corresponding except block code.
+
+Things to note: 
+1) Only 1 EXCEPTION_REGISTRATION frame 
+2) From the previousTryLevel in the _SCOPETABLE, we can index the other SCOPETABLE
+ 
