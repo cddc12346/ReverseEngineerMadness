@@ -45,6 +45,7 @@ Since windows XP SP1, before exception handler is called, all registers are XORe
 ## Exploitation Concept
 
 ![plot](./Images/Exploitation_Concept.png)
+![plot](./Exercise/another_diagram.png)
 
 Payload must do the following things
 
@@ -57,7 +58,8 @@ Payload must do the following things
 				
 Question: Why can't you just do a jump at the SE Handler to shellcode?
 
-SEH Handler's pop pop ret must be a SafeSEH unprotected address. Technically if I find a jmp instruction in the SafeSEH module, I should be able to do it.
+SEH Handler's pop pop ret must be a SafeSEH unprotected address. 
+Technically if I find a jmp instruction in the SafeSEH module, I should be able to do it.
  
 I discovered this by attempting to use a ROP gadget from kernel32.dll which failed. 
 
@@ -94,10 +96,15 @@ stack looks like this:
 //Don't understand this instructions...
 771e6ca8 ff7514          push    dword ptr [ebp+14h]
 771e6cab ff7510          push    dword ptr [ebp+10h]
-771e6cae ff750c          push    dword ptr [ebp+0Ch]
-771e6cb1 ff7508          push    dword ptr [ebp+8]
+771e6cae ff750c          push    dword ptr [ebp+0Ch]	//pointer to next SEH
+771e6cb1 ff7508          push    dword ptr [ebp+8]		//_exception_record structure
+
+//Get the SEH handler and execute it
+//The SEH Handler must be within a SafeSEH address
 771e6cb4 8b4d18          mov     ecx,dword ptr [ebp+18h]
 771e6cb7 ffd1            call    ecx {essfunc+0x10b4 (625010b4)}
 
 ```
+
+I don't think it is using the Extended Exception Handling Frame....
 
