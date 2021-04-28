@@ -53,7 +53,7 @@ Payload must do the following things
 3) Overwrite the SE handler with a pointer to an instruction that will bring you back to next SEH and execute the jumpcode.
 4) The shellcode should be directly after the overwritten SE Handler. Some small jumpcode contained in the overwritten “pointer to next SEH record” will jump to it).
 
-![plot](./Images/ExploitationConcept2.png)
+![plot](./Exercise/ExploitationConcept2.png)
 				
 Why can't you just do a jump at the SE Handler to shellcode?
 SEH Handler's pop pop ret must be a SafeSEH unprotected address 
@@ -74,10 +74,10 @@ ebp-8 016ee000
 bp 625010b4 
 ```
 
-![plot](./Images/CallStack.png)
+![plot](./Exercise/CallStack.png)
 
 ## Analysing the call stack disassembly
-![plot](./Images/CallStackDisassembly.png)
+![plot](./Exercise/CallStackDisassembly.png)
 
 ```
 //builds EXCEPTION_REGISTRATION structure on the stack
