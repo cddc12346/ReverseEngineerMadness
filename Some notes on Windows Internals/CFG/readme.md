@@ -12,17 +12,17 @@ It is also important to note that CFG only protects against **indirect calls**. 
 ## How a program looks like without CFG
 ![plot](./Images/NoCFG.PNG)
 
-## How a program looks like With CFG
+## How a program looks like with CFG
 ![plot](./Images/WithCFG.PNG)
 
-Before the indirect call(call esi), the target address is passed to the _guard_check_icall function.
-In Windows 10, it points to *ntdll!LdrpValidateUserCallTarget*.
+Before the indirect call (call esi), the target address is passed to the **_guard_check_icall** function.
+In Windows 10, it points to **ntdll!LdrpValidateUserCallTarget**.
 
 This function takes in a target address as argument and does the following:
 
-1) Access a bitmap (*CFGBitmap*) which represents the **starting location of all the functions in the process space.** 
+1) Access a bitmap (**CFGBitmap**) which represents the **starting location of all the functions in the process space.** 
 
-The status of **every** 8 bytes in the process space corresponds to a bit in *CFGBitmap*. 
+The status of **every** 8 bytes in the process space corresponds to a bit in **CFGBitmap**. 
 
 Status here refers to whether it is a starting location. If it is a starting location, the bit will be marked 1.
 
@@ -32,11 +32,11 @@ while the last byte will give the value of X.
 ![plot](./Images/TargetAddress.PNG)
 
 Target address of 0x00b01030:
-First 3 bytes gives the pointer to CFGBitMap (in blue)
-Last byte gives X (in red)
+First 3 bytes gives the pointer to CFGBitMap (in blue).
+Last byte gives X (in red).
 
 ```
-Pointer to CFGBitMap = CFGBitmap + 0x00b010
+Pointer to CFGBitMap = base address of CFGBitmap + 0x00b010
 ```
 
 3) Checks if target address is aligned with 0x10 (Target address & 0xF)
@@ -45,10 +45,13 @@ If its aligned, X is the bit offset value within the unit.
 
 If not aligned, X | 0x1 is the bit offset value. ~~Isn't X | 0x1 always X?~~ (6 | 1 can be 7)
 
-4) In this case, X = 6. Now using the pointer to CFGBitMap (calculated 
+4) In this case, X = 6 since 0x00b01030 is aligned. 
+
+Now using the pointer to CFGBitMap (calculated 
 with the help of the first three bytes of the target address), we check the 6th bit.
 
 ![plot](./Images/ValueInCFGBitMap.PNG)
+
 If the sixth bit is 1, the indirect call target is a valid function address.
 Else, invalid and trigger exception!!!
 
@@ -57,17 +60,16 @@ Protects overwriting return address on stack
 
 ## Questions/Doubts
 
-1) How does the CFGBitMap correlate to the current calling function?
-
-There is only mention of target address. 
+1) How does the CFGBitMap correlate to the current calling function since there is only mention of target address. 
  
-Or does it only check if its a valid function starting address?
+My guess is that it only checks whether the indirect call is going to be a starting location. Does not verify where it come from.
 
-2) Still don't understand the line about status corresponding to a bit in CFGBitMap.
+2) ~~Still don't understand the line about status corresponding to a bit in CFGBitMap.~~
 
 ## Maybe it can be better explained if we look at some bypasses...
 
-So effectively, if i buffer overflow, i cannot jump to my shellcode nor any ROP since it is not starting address of any function.
+So effectively, if i buffer overflow, 
+i cannot jump to my shellcode nor any ROP since it is not a valid starting address of any function.
 
 However, i can jump to any other function i want.
 
