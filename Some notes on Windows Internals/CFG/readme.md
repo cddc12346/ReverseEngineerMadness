@@ -1,7 +1,9 @@
 # Lets talk about Control Flow Guard now!
 
 CFG is a mitigation technology to prevent control flow being redirected to unintended locations, 
-by validating the target address of an indirect branch before it takes place
+by validating the target address of an indirect branch before it takes place. CFG ensures that the target address is a valid starting address.
+
+It is also important to note that CFG only protects against **indirect calls**. Does not protect also stack return address corruption.
 
 ## Resources
 1) https://paper.seebug.org/papers/Security%20Conf/Blackhat/2017_asia/asia-17-Sun-Never-Let-Your-Guard-Down-Finding-Unguarded-Gates-To-Bypass-Control-Flow-Guard-With-Big-Data.pdf
@@ -22,9 +24,13 @@ In Windows 10, it points to *ntdll!LdrpValidateUserCallTarget*.
 
 This function takes a target address as argument and does the following:
 
-1) Access a bitmap (*CFGBitmap*) which represents the **starting location** of all the functions in 
-the process space. The status of every 8 bytes in the process space corresponds to a bit in *CFGBitmap*.
-**What does this status means???**
+1) Access a bitmap (*CFGBitmap*) which represents the **starting location of all the functions in the process space.** 
+
+The status of every 8 bytes in the process space corresponds to a bit in *CFGBitmap*.
+
+**What does the above sentence mean??? Does it map every address of the process space?**
+
+Does it map every address of the process space onto the CFGBitMap?
 
 2) Example address of 0x00b01030. The highest 3 bytes (0x00b010) is the offset for CFGBitmap while 
 the last byte will give the value of X. 
@@ -52,4 +58,21 @@ Else, invalid and trigger exception!!!
 
 ## New mitigations??? Return Flow Guard 
 Protects overwriting return address on stack
+
+## Questions/Doubts
+
+1) How does the CFGBitMap correlate to the current calling function?
+
+There is only mention of target address. 
  
+Or does it only check if its a valid function starting address?
+
+2) Still don't understand the line about status corresponding to a bit in CFGBitMap.
+
+## Maybe it can be better explained if we look at some bypasses...
+
+So effectively, if i buffer overflow, i cannot jump to my shellcode nor any ROP since it is not starting address of any function.
+
+However, i can jump to any other function i want.
+
+Also, if i corrupt return addresses on the stack, i can also bypass CFG!!!
