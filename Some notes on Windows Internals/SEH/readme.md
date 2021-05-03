@@ -103,8 +103,8 @@ bp 625010b4	//this is the pop, pop, ret in SafeSEH module
 771e6ca1 64892500000000  mov     dword ptr fs:[0],esp
 
 //Don't understand this instructions...
-771e6ca8 ff7514          push    dword ptr [ebp+14h]
-771e6cab ff7510          push    dword ptr [ebp+10h]
+771e6ca8 ff7514          push    dword ptr [ebp+14h]	//DispatcherContext
+771e6cab ff7510          push    dword ptr [ebp+10h]	//ContextRecord
 771e6cae ff750c          push    dword ptr [ebp+0Ch]	//pointer to next SEH
 771e6cb1 ff7508          push    dword ptr [ebp+8]		//_exception_record structure
 
@@ -124,3 +124,19 @@ Hence, our exploitation concept of putting a working gadget at next SEH works.
 Do refer to my exploit.py script in the Exercise folder. 
 
 You may also use the binary for vulnserver.exe as well.
+
+## Additional notes of SEH
+
+### More explaination about exception occurring!
+When an exception occurs, ntdll!KiUserExceptionDispatcher is called. 
+
+
+
+
+
+
+
+
+
+
+
