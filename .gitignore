@@ -13,3 +13,5 @@ Some notes on IonMonkey/CVE-2019-9810/firefox/firefox/mozavcodec.dll
 Some notes on IonMonkey/CVE-2019-9810/firefox/firefox/Accessible.tlb
 Some notes on IonMonkey/CVE-2019-9810/firefox/firefox/AccessibleHandler.dll
 Some notes on Turbofan/PlaidCTF - The False Promise/d8
+*.pdb
+*.dll
