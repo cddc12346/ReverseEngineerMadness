@@ -1,0 +1,60 @@
+[Escape] Begin (ScalarReplacement)
+[Escape] In IsObjectEscaped I added (line 162)
+
+[Escape] Check object
+newplainobject67:Object = newplainobject constant66:Shape
+resumepoint mode=After (caller in block5) constant65 constant65 constant59 constant45 constant46 newplainobject67
+  at ./exploit.js:2
+  in ./exploit.js:8
+  in ./exploit.js:16
+[Escape]   In isNewPlainObject, first time its called, giving it a shape
+
+[Escape]   Current def = 
+guardshape80:Object = guardshape newplainobject67:Object
+  after ./exploit.js:8
+  in ./exploit.js:16
+
+################################################################################################################
+[Escape]   In Opcode::GuardShape
+Opcode:GuardShapes calls IsObjectEscaped(def->toInstruction(), shape)
+
+######################################## Iteration 1 (for (MUseIterator i(ins->usesBegin()); i != ins->usesEnd(); i++)
+
+Second time shape is called, a shape is already defined, so it doesnt enter the branch that create newPlainObject
+
+[Escape]   In IsObjectEscaped I added (line 162)
+
+
+[Escape]   Check object
+guardshape80:Object = guardshape newplainobject67:Object
+  after ./exploit.js:8
+  in ./exploit.js:16
+
+//this is a Opcode of LoadFixedSlot
+[Escape]     Current def = 
+loadfixedslot81:Value = loadfixedslot guardshape80:Object
+  after ./exploit.js:8
+  in ./exploit.js:16
+
+[Escape]     In Opcode::Store/LoadFixedSlot
+
+[Escape]     In Opcode::Store/LoadFixedSlot first argument
+
+[Escape]     Object is not escaped
+
+######################################## Iteration 2 (for (MUseIterator i(ins->usesBegin()); i != ins->usesEnd(); i++)
+
+// doesnt fall in Opcode store/loadfixedslot
+
+[Escape]   Current def = 
+storedynamicslot79:None = storedynamicslot slots78 488 newplainobject67
+resumepoint mode=After (caller in block4) constant52 constant52 constant44 constant45 constant46 newplainobject67 newplainobject67
+  at ./exploit.js:9
+  in ./exploit.js:16
+[Escape]   In default
+
+[Escape]   is escaped by
+storedynamicslot79:None = storedynamicslot slots78 488 newplainobject67
+resumepoint mode=After (caller in block4) constant52 constant52 constant44 constant45 constant46 newplainobject67 newplainobject67
+  at ./exploit.js:9
+  in ./exploit.js:16
