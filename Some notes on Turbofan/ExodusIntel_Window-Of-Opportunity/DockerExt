@@ -1,0 +1,51 @@
+# set the revision in the docker file first
+
+# Look at the commit in src, make sure that it is the old commit
+1  cd src
+2  git log -n 1
+3  git log
+
+# Get the COMMIT_DATE of the commint in src, then change directory to your depot_tools
+4  COMMIT_DATE=$(git log -n 1 --pretty=format:%ci)
+5  cd ../
+6  ls -la
+7  cd ../
+8  ls -la
+9  cd ../
+0  ls -la
+1  cd depot_tools/
+2  ls -la
+
+# Now checkout the tools at the date of commit of chrome
+3  git checkout $(git rev-list -n 1 --before="$COMMIT_DATE" master)
+4  git checkout $(git rev-list -n 1 --before="$COMMIT_DATE" origin)
+5  export DEPOT_TOOLS_UPDATE=0
+6  git clean -ffd
+7  cd ../
+8  ls -la
+9  git clean -ffd
+0  cd v8/
+1  ls -la
+2  git clean -ffd
+3  cd v8/
+4  git clean -ffd
+5  gclient sync -D --force --reset --with_branch_heads
+6  cd src/
+7  cd compil
+8  cd compiler
+
+# Checking if the source code is not patched
+9  cat js-call-reducer.cc | grep kMaxFastArrayLength
+0  cat js-call-reducer.cc | grep JSCreateArray
+1  cat js-call-reducer.cc | grep -i original_length
+2  cat js-call-reducer.cc | grep -i kMaxFastArrayLength
+3  cd ../../
+4  ls -la
+
+# 
+5  gn gen out/turboflan --args='v8_use_external_startup_data=false is_component_build=false v8_monolithic=true is_debug=fal8_enable_object_print=true symbol_level=2 target_cpu="x64"'
+6  cd src/compiler
+7  cat js-call-reducer.cc | grep -i kMaxFastArrayLength
+8  cd ../../
+9  ninja -C ./out/turboflan d8 
+0  history
